@@ -114,7 +114,6 @@ class BasePea:
         self.args.pea_id = self.args.shard_id
         self.args.parallel = self.args.shards
         self.name = self.args.name or self.__class__.__name__
-
         self.logger = JinaLogger(self.name, **vars(self.args))
 
         if self.args.runtime_backend == RuntimeBackendType.THREAD:
@@ -168,6 +167,7 @@ class BasePea:
             },
         )
         self.daemon = self.args.daemon  #: required here to set process/thread daemon
+        self.logger.debug(f' Pea started with arguments {self.args}')
 
     def _set_ctrl_adrr(self):
         """Sets control address for different runtimes"""

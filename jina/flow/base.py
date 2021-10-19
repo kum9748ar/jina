@@ -1794,6 +1794,8 @@ class Flow(PostMixin, JAMLCompatible, ExitStack, metaclass=FlowType):
         """
         from ..helper import run_async
 
+        self.logger.debug(f' Call rolling update for {pod_name}')
+
         run_async(
             self._pod_nodes[pod_name].rolling_update,
             dump_path=dump_path,
