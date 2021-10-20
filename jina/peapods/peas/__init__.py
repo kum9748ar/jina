@@ -204,9 +204,10 @@ class BasePea:
         This method calls :meth:`terminate` in :class:`threading.Thread` or :class:`multiprocesssing.Process`.
         """
         if hasattr(self.worker, 'terminate'):
-            self.logger.debug(f' terminating the runtime process')
+            self.logger.debug(
+                f' terminating the runtime process with PID {self.worker.pid}'
+            )
             self.worker.terminate()
-            self.logger.debug(f' runtime process properly terminated')
         else:
             self.logger.debug(f' terminating the runtime thread')
             try:
@@ -214,7 +215,6 @@ class BasePea:
             except:
                 self.worker._tstate_lock.release()
                 self.worker._stop()
-            self.logger.debug(f' runtime thread properly terminated')
 
     def _retry_control_message(self, command: str, num_retry: int = 3):
         from ..zmq import send_ctrl_message

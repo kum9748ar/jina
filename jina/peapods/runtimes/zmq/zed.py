@@ -41,19 +41,7 @@ class ZEDRuntime(BaseRuntime):
         :param kwargs: extra keyword arguments
         """
         super().__init__(args, **kwargs)
-        if not __windows__:
-            try:
-                signal.signal(
-                    signal.SIGTERM, lambda *args, **kwargs: self._handle_sig_term()
-                )
-            except ValueError:
-                self.logger.warning(
-                    'Runtime is being run in a thread. Threads can not receive signals and may not shutdown as expected.'
-                )
-        else:
-            import win32api
 
-            win32api.SetConsoleCtrlHandler(self._handle_sig_term)
         self._id = random_identity()
         self._last_active_time = time.perf_counter()
         self.ctrl_addr = self.get_control_address(args.host, args.port_ctrl)
@@ -68,6 +56,22 @@ class ZEDRuntime(BaseRuntime):
         self._static_routing_table = args.static_routing_table
 
         self._load_zmqstreamlet()
+        self.logger.warning(f' ZMQSTREAMLET LOADED')
+        if not __windows__:
+            try:
+                for signum in {signal.SIGINT, signal.SIGTERM}:
+                    signal.signal(
+                        signum,
+                        lambda *args, **kwargs: self._handle_sig_term(),
+                    )
+            except ValueError:
+                self.logger.warning(
+                    'Runtime is being run in a thread. Threads can not receive signals and may not shutdown as expected.'
+                )
+        else:
+            import win32api
+
+            win32api.SetConsoleCtrlHandler(self._handle_sig_term)
 
     def run_forever(self):
         """Start the `ZmqStreamlet`."""
@@ -280,7 +284,7 @@ class ZEDRuntime(BaseRuntime):
             # generally unless executor throws an OSError, the exception are caught and solved inplace
             processed_msg = self._callback(msg)
             # dont sent responses for CANCEL and IDLE control requests
-            if msg.is_data_request or msg.request.command not in ['CANCEL', 'IDLE']:
+            if msg.is_data_request or msg.request.command not in ['IDLE', 'CANCEL']:
                 self._zmqstreamlet.send_message(processed_msg)
         except RuntimeTerminated:
             # this is the proper way to end when a terminate signal is sent
