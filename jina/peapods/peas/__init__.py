@@ -370,6 +370,8 @@ class BasePea:
             pass
         else:
             self.terminate()
+            if not self.args.daemon:
+                self.join()
         self.logger.close()
 
     def __enter__(self):

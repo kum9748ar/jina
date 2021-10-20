@@ -682,7 +682,7 @@ class Pod(BasePod):
         ):
             mermaid_graph = [f'subgraph {self.name};']
 
-            names = [args.name for args in self._fifo_args]
+            names = [args.name for args in self._stack_args]
             uses = self.args.uses
             if len(names) == 1:
                 mermaid_graph.append(f'{names[0]}/pea-0[{uses}]:::PEA;')

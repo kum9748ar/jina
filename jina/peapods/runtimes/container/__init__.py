@@ -71,14 +71,20 @@ class ContainerRuntime(BaseRuntime):
         """Stop the container."""
         # Send termination command to container
         if self._container is not None:
-            self._container.kill(signal='SIGTERM')
-            self._container.stop()
+            timeout = int(self.args.timeout_ctrl / 1000)
+            if timeout == 0:
+                timeout = 1
+            self._container.stop(timeout=timeout)
+            self._container.wait(timeout=timeout)
             self._container = None
         super().teardown()
 
     def _stream_logs(self):
-        for line in self._container.logs(stream=True):
-            self.logger.info(line.strip().decode())
+        try:
+            for line in self._container.logs(stream=True):
+                self.logger.info(line.strip().decode())
+        except Exception as ex:
+            self.logger.warning(f' Container logs returned {ex!r}')
 
     def run_forever(self):
         """Stream the logs while running."""

@@ -44,10 +44,7 @@ class ZEDRuntime(BaseRuntime):
         if not __windows__:
             try:
                 signal.signal(
-                    signal.SIGTERM,
-                    lambda *args, **kwargs: self._zmqstreamlet.io_loop.add_callback_from_signal(
-                        self._handle_sig_term
-                    ),
+                    signal.SIGTERM, lambda *args, **kwargs: self._handle_sig_term()
                 )
             except ValueError:
                 self.logger.warning(
