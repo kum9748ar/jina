@@ -32,7 +32,7 @@ class CompoundPod(BasePod):
         super().__init__()
         args.upload_files = BasePod._set_upload_files(args)
         self.args = args
-        self.logger = JinaLogger(self.args.name or self.__class__.name)
+        self.logger = JinaLogger(self.args.name or self.__class__.__name__)
         self.needs = (
             needs or set()
         )  #: used in the :class:`jina.flow.Flow` to build the graph

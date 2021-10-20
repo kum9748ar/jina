@@ -209,7 +209,11 @@ class BasePea:
             self.logger.debug(f' runtime process properly terminated')
         else:
             self.logger.debug(f' terminating the runtime thread')
-            self.worker._stop()
+            try:
+                self.worker._stop()
+            except:
+                self.worker._tstate_lock.release()
+                self.worker._stop()
             self.logger.debug(f' runtime thread properly terminated')
 
     def _retry_control_message(self, command: str, num_retry: int = 3):
@@ -302,7 +306,6 @@ class BasePea:
             _timeout = None
         else:
             _timeout /= 1e3
-
         if self._wait_for_ready_or_shutdown(_timeout):
             self._check_failed_to_start()
             self.logger.debug(__ready_msg__)
@@ -353,16 +356,22 @@ class BasePea:
         # if that 1s is not enough, it means the process/thread is still in forever loop, cancel it
         self.logger.debug('waiting for ready or shutdown signal from runtime')
         if self.is_ready.is_set() and not self.is_shutdown.is_set():
-            self._deactivate_runtime()
-            # This should fire a chain of SIGTERM passing, if local, ZEDRuntime, GRPCDataRuntime and all the Gateway
-            # Runtimes are ready to properly handle SIGTERM. If ContainerRuntime or JinaDRuntime, they are also
-            # ready, and they will propagate the required termination, ContainerRuntime will `kill` the container,
-            # sending a SIGTERM inside the container, and JinaDRuntime will send an API call to delete the Pea
-            # remotely which will close the Pea which will send the SIGTERM to the local ZEDRuntime or GRPCDataRuntime
-            self.terminate()
-            # if it is not daemon, block until the process/thread finish work
-            if not self.args.daemon:
-                self.join()
+            try:
+                self._deactivate_runtime()
+            except Exception as ex:
+                self.logger.warning(
+                    f'Exception raised when deactivating runtime {ex!r} '
+                )
+            finally:
+                # This should fire a chain of SIGTERM passing, if local, ZEDRuntime, GRPCDataRuntime and all the Gateway
+                # Runtimes are ready to properly handle SIGTERM. If ContainerRuntime or JinaDRuntime, they are also
+                # ready, and they will propagate the required termination, ContainerRuntime will `kill` the container,
+                # sending a SIGTERM inside the container, and JinaDRuntime will send an API call to delete the Pea
+                # remotely which will close the Pea which will send the SIGTERM to the local ZEDRuntime or GRPCDataRuntime
+                self.terminate()
+                # if it is not daemon, block until the process/thread finish work
+                if not self.args.daemon:
+                    self.join()
         elif self.is_shutdown.is_set():
             # here shutdown has been set already, therefore `run` will gracefully finish
             pass
@@ -370,6 +379,7 @@ class BasePea:
             self.terminate()
             if not self.args.daemon:
                 self.join()
+        self.logger.debug(__stop_msg__)
         self.logger.close()
 
     def __enter__(self):

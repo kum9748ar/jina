@@ -276,7 +276,7 @@ class Pod(BasePod):
         super().__init__()
         args.upload_files = BasePod._set_upload_files(args)
         self.args = args
-        self.logger = JinaLogger(self.args.name or self.__class__.name)
+        self.logger = JinaLogger(self.args.name or self.__class__.__name__)
 
         # a pod only can have replicas and they can only have polling ANY
         self.args.polling = PollingType.ANY

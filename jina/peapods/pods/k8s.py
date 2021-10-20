@@ -320,7 +320,7 @@ class K8sPod(BasePod):
     ):
         super().__init__()
         self.args = args
-        self.logger = JinaLogger(self.args.name or self.__class__.name)
+        self.logger = JinaLogger(self.args.name or self.__class__.__name__)
         self.needs = needs or set()
         self.deployment_args = self._parse_args(args)
         self.version = self._get_base_executor_version()

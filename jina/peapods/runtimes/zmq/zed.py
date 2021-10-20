@@ -329,6 +329,8 @@ class ZEDRuntime(BaseRuntime):
                 )
 
             self._zmqstreamlet.send_message(msg)
+        finally:
+            self.logger.debug(f' Message callback finished')
 
     #: Some class-specific properties
 
