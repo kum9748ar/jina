@@ -108,7 +108,6 @@ class BasePea:
     """
 
     def __init__(self, args: 'argparse.Namespace'):
-        super().__init__()  #: required here to call process/thread __init__
         self.args = args
         # BACKWARDS COMPATIBILITY
         self.args.pea_id = self.args.shard_id
@@ -167,7 +166,6 @@ class BasePea:
             },
         )
         self.daemon = self.args.daemon  #: required here to set process/thread daemon
-        self.logger.debug(f' Pea started with arguments {self.args}')
 
     def _set_ctrl_adrr(self):
         """Sets control address for different runtimes"""

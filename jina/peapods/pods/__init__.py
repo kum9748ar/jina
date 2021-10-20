@@ -1,5 +1,4 @@
 import copy
-import sys
 from abc import abstractmethod
 from argparse import Namespace
 from contextlib import ExitStack
@@ -19,6 +18,7 @@ from ...enums import (
 )
 from ...helper import random_identity, CatchAllCleanupContextManager
 from ...jaml.helper import complete_path
+from ...logging.logger import JinaLogger
 
 
 class BasePod(ExitStack):
@@ -276,6 +276,8 @@ class Pod(BasePod):
         super().__init__()
         args.upload_files = BasePod._set_upload_files(args)
         self.args = args
+        self.logger = JinaLogger(self.args.name or self.__class__.name)
+
         # a pod only can have replicas and they can only have polling ANY
         self.args.polling = PollingType.ANY
         self.needs = (
@@ -514,6 +516,7 @@ class Pod(BasePod):
         :param uses_with: a Dictionary of arguments to restart the executor with
         """
         # BACKWARDS COMPATIBILITY
+        self.logger.debug(f' Starting rolling update')
         if dump_path is not None:
             if uses_with is not None:
                 uses_with['dump_path'] = dump_path
@@ -537,6 +540,7 @@ class Pod(BasePod):
                     new_pea.activate_runtime()
                     self.peas[i] = new_pea
                     pea_args_idx += 1
+            self.logger.debug(f' Successful rolling update')
         except:
             raise
 
